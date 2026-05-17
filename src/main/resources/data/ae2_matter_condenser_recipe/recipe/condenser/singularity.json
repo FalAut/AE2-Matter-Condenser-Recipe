@@ -1,0 +1,8 @@
+{
+  "type": "ae2_matter_condenser_recipe:condenser",
+  "result": {
+    "id": "ae2:singularity",
+    "count": 1
+  },
+  "required_power": 256000
+}

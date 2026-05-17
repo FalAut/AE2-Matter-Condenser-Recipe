@@ -1,0 +1,11 @@
+{
+  "gui.ae2_matter_condenser_recipe.condenser.select_output": "选择输出",
+  "gui.ae2_matter_condenser_recipe.condenser.open_selector": ">",
+  "gui.ae2_matter_condenser_recipe.condenser.select_output_button": "打开输出选择器",
+  "gui.ae2_matter_condenser_recipe.condenser.no_recipes": "未找到配方",
+  "gui.ae2_matter_condenser_recipe.condenser.trash": "垃圾桶",
+  "gui.ae2_matter_condenser_recipe.condenser.required_power": "所需物质: %s",
+  "gui.ae2_matter_condenser_recipe.condenser.required_power_tooltip": "%s (所需物质: %s)",
+  "gui.ae2_matter_condenser_recipe.common.back": "返回",
+  "gui.ae2_matter_condenser_recipe.void_cell.mode": "模式: %s"
+}

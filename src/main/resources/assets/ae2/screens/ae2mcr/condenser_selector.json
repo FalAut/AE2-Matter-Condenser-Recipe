@@ -1,0 +1,33 @@
+{
+  "$schema": "../schema.json",
+  "includes": ["../common/common.json"],
+  "generatedBackground": {
+    "width": 190,
+    "height": 180
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "gui.ae2_matter_condenser_recipe.condenser.select_output"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  },
+  "widgets": {
+    "recipes": {
+      "left": 10,
+      "top": 24,
+      "width": 156,
+      "height": 140
+    },
+    "scrollbar": {
+      "left": 170,
+      "top": 24,
+      "width": 12,
+      "height": 140
+    }
+  }
+}

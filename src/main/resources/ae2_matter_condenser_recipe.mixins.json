@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.falaut.ae2mcr.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CondenserBlockEntityMixin",
+    "CondenserMenuMixin",
+    "extendedae.ContainerVoidCellMixin",
+    "extendedae.ItemVoidCellMixin",
+    "extendedae.VoidCellInventoryMixin"
+  ],
+  "client": [
+    "CondenserScreenMixin",
+    "extendedae.GuiVoidCellMixin",
+    "integration.emi.AppEngEmiPluginMixin",
+    "integration.jei.JeiCondenserCategoryMixin",
+    "integration.jei.JeiPluginMixin",
+    "integration.rei.ReiCondenserCategoryMixin",
+    "integration.rei.ReiPluginMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
