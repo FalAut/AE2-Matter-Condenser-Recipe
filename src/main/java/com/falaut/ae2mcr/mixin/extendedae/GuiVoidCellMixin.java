@@ -61,11 +61,11 @@ public abstract class GuiVoidCellMixin extends AEBaseScreen<ContainerVoidCell> {
             appeng.client.gui.style.ScreenStyle style, CallbackInfo ci) {
         ae2mcr$modeButton = new VoidCellModeButton((VoidCellMenuBridge) menu);
         ae2mcr$openSelectorButton = new AE2Button(
-                Component.translatable("gui.ae2_matter_condenser_recipe.condenser.open_selector"),
+                Component.translatable("gui.ae2mcr.condenser.open_selector"),
                 btn -> switchToScreen(new VoidCellRecipeSelectionScreen((AEBaseScreen<ContainerVoidCell>) (Object) this)));
         ae2mcr$openSelectorButton.setTooltip(
                 net.minecraft.client.gui.components.Tooltip.create(
-                        Component.translatable("gui.ae2_matter_condenser_recipe.condenser.select_output_button")));
+                        Component.translatable("gui.ae2mcr.condenser.select_output_button")));
     }
 
     @Inject(method = "drawFG", at = @At("HEAD"), remap = false)

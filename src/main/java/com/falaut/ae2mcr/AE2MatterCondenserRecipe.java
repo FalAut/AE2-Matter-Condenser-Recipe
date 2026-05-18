@@ -9,7 +9,7 @@ import net.neoforged.fml.ModContainer;
 
 @Mod(AE2MatterCondenserRecipe.MOD_ID)
 public class AE2MatterCondenserRecipe {
-    public static final String MOD_ID = "ae2_matter_condenser_recipe";
+    public static final String MOD_ID = "ae2mcr";
 
     public AE2MatterCondenserRecipe(IEventBus modBus, ModContainer modContainer) {
         ModRecipeTypes.RECIPE_TYPES.register(modBus);

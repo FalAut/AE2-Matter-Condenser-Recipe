@@ -66,13 +66,13 @@ public class VoidCellModeButton extends IconButton {
         var lines = new ArrayList<Component>();
         lines.add(Component.translatable("gui.extendedae.void_cell"));
         lines.add(getSelectedDisplayName());
-        lines.add(Component.translatable("gui.ae2_matter_condenser_recipe.condenser.required_power", requiredPower));
+        lines.add(Component.translatable("gui.ae2mcr.condenser.required_power", requiredPower));
         return lines;
     }
 
     public Component getSelectedDisplayName() {
         if (CondenserSelectionState.isTrash(selectedId)) {
-            return Component.translatable("gui.ae2_matter_condenser_recipe.condenser.trash");
+            return Component.translatable("gui.ae2mcr.condenser.trash");
         }
         return preview.isEmpty() ? Component.literal(selectedId.toString()) : preview.getHoverName();
     }

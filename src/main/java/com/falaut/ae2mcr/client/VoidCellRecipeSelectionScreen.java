@@ -49,7 +49,7 @@ public class VoidCellRecipeSelectionScreen extends AESubScreen<ContainerVoidCell
     protected void updateBeforeRender() {
         super.updateBeforeRender();
         setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE,
-                Component.translatable("gui.ae2_matter_condenser_recipe.condenser.select_output"));
+                Component.translatable("gui.ae2mcr.condenser.select_output"));
         recipeListWidget.refreshRows();
     }
 
@@ -121,7 +121,7 @@ public class VoidCellRecipeSelectionScreen extends AESubScreen<ContainerVoidCell
                 var row = rowButtons.get(rowIndex);
                 if (i >= ids.size()) {
                     if (ids.isEmpty() && rowIndex == 0) {
-                        row.setEmpty(Component.translatable("gui.ae2_matter_condenser_recipe.condenser.no_recipes"));
+                        row.setEmpty(Component.translatable("gui.ae2mcr.condenser.no_recipes"));
                     } else {
                         row.setHidden();
                     }
@@ -131,7 +131,7 @@ public class VoidCellRecipeSelectionScreen extends AESubScreen<ContainerVoidCell
                 ResourceLocation id = ids.get(i);
                 ItemStack preview = menuBridge.ae2mcr$getPreview(id);
                 Component label = CondenserSelectionState.isTrash(id)
-                        ? Component.translatable("gui.ae2_matter_condenser_recipe.condenser.trash")
+                        ? Component.translatable("gui.ae2mcr.condenser.trash")
                         : (preview.isEmpty() ? Component.literal(id.toString()) : preview.getHoverName());
                 int requiredPower = menuBridge.ae2mcr$getRequiredPower(id);
                 boolean active = selected == null || !selected.equals(id);
@@ -160,7 +160,7 @@ public class VoidCellRecipeSelectionScreen extends AESubScreen<ContainerVoidCell
             this.visible = true;
             this.emptyLine = false;
             setTooltip(Tooltip.create(Component.translatable(
-                    "gui.ae2_matter_condenser_recipe.condenser.required_power_tooltip",
+                    "gui.ae2mcr.condenser.required_power_tooltip",
                     text,
                     requiredPower)));
         }

@@ -32,16 +32,16 @@ public abstract class ItemVoidCellMixin {
         Component modeName;
 
         if (CondenserSelectionState.isTrash(selectedId)) {
-            modeName = Component.translatable("gui.ae2_matter_condenser_recipe.condenser.trash");
+            modeName = Component.translatable("gui.ae2mcr.condenser.trash");
         } else if (!output.isEmpty()) {
             modeName = output.getHoverName().copy();
         } else {
             modeName = Component.literal(selectedId.toString());
         }
-        lines.add(Component.translatable("gui.ae2_matter_condenser_recipe.void_cell.mode", modeName)
+        lines.add(Component.translatable("gui.ae2mcr.void_cell.mode", modeName)
                 .withStyle(ChatFormatting.GREEN));
         if (!CondenserSelectionState.isTrash(selectedId) && !output.isEmpty()) {
-            lines.add(Component.translatable("gui.ae2_matter_condenser_recipe.condenser.required_power", requiredPower)
+            lines.add(Component.translatable("gui.ae2mcr.condenser.required_power", requiredPower)
                     .withStyle(ChatFormatting.GRAY));
         }
 

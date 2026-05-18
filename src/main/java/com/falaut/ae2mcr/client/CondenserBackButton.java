@@ -18,6 +18,6 @@ public class CondenserBackButton extends IconButton {
 
     @Override
     public List<Component> getTooltipMessage() {
-        return List.of(Component.translatable("gui.ae2_matter_condenser_recipe.common.back"));
+        return List.of(Component.translatable("gui.ae2mcr.common.back"));
     }
 }

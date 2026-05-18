@@ -1,5 +1,5 @@
 {
-  "type": "ae2_matter_condenser_recipe:condenser",
+  "type": "ae2mcr:condenser",
   "result": {
     "id": "ae2:matter_ball",
     "count": 1

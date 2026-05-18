@@ -67,11 +67,11 @@ public class CondenserModeButton extends IconButton {
         var lines = new ArrayList<Component>();
         lines.add(ButtonToolTips.CondenserOutput.text());
         if (CondenserSelectionState.isTrash(selectedId)) {
-            lines.add(Component.translatable("gui.ae2_matter_condenser_recipe.condenser.trash"));
+            lines.add(Component.translatable("gui.ae2mcr.condenser.trash"));
         } else {
             lines.add(preview.isEmpty() ? Component.literal(selectedId.toString()) : preview.getHoverName());
         }
-        lines.add(Component.translatable("gui.ae2_matter_condenser_recipe.condenser.required_power", requiredPower));
+        lines.add(Component.translatable("gui.ae2mcr.condenser.required_power", requiredPower));
         return lines;
     }
 }

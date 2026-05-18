@@ -100,7 +100,7 @@ public final class CondenserViewerRecipes {
 
     public static Component displayName(CondenserViewerRecipe recipe) {
         if (recipe == null || CondenserSelectionState.isTrash(recipe.id())) {
-            return Component.translatable("gui.ae2_matter_condenser_recipe.condenser.trash");
+            return Component.translatable("gui.ae2mcr.condenser.trash");
         }
 
         return recipe.output().isEmpty() ? Component.literal(recipe.id().toString()) : recipe.output().getHoverName();
@@ -110,7 +110,7 @@ public final class CondenserViewerRecipes {
         return List.of(
                 displayName(recipe),
                 Component.translatable(
-                        "gui.ae2_matter_condenser_recipe.condenser.required_power",
+                        "gui.ae2mcr.condenser.required_power",
                         recipe == null ? 0 : recipe.requiredPower()));
     }
 

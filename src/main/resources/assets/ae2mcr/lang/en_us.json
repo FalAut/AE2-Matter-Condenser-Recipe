@@ -1,0 +1,11 @@
+{
+  "gui.ae2mcr.condenser.select_output": "Select Output",
+  "gui.ae2mcr.condenser.open_selector": ">",
+  "gui.ae2mcr.condenser.select_output_button": "Open output selector",
+  "gui.ae2mcr.condenser.no_recipes": "No condenser recipes found",
+  "gui.ae2mcr.condenser.trash": "Trash",
+  "gui.ae2mcr.condenser.required_power": "Required Power: %s",
+  "gui.ae2mcr.condenser.required_power_tooltip": "%s (Required Power: %s)",
+  "gui.ae2mcr.common.back": "Back",
+  "gui.ae2mcr.void_cell.mode": "Mode: %s"
+}

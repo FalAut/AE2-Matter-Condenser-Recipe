@@ -1,62 +1,54 @@
 # AE2 Matter Condenser Recipe
 
-A NeoForge mod for **Minecraft 1.21.1** that replaces AE2 Matter Condenser output logic with a strict, datapack-driven recipe system.
+这个模组把 AE2 的物质聚合器改成了配方驱动。  
+不再只固定产出物质球/奇点，产物和需求都可以通过配方数据包调整。  
+同样的逻辑也支持 [ExtendedAE](https://www.curseforge.com/minecraft/mc-mods/ex-pattern-provider) 的 ME虚空元件。
 
-## Features
+---
 
-- Replaces AE2 condenser output selection with custom recipes (`ae2_matter_condenser_recipe:condenser`).
-- Uses **strict recipe mode**: no fallback to AE2 condenser config outputs.
-- Keeps output cycling, and adds a `>` selector button in GUI for direct output selection.
-- Renders output as real item icons in buttons and selection lists, with synced tooltips.
-- Includes a selectable `trash` mode in GUI selectors.
-- Adds recipe-viewer compatibility layers:
-  - JEI (via AE2 JEI Integration)
-  - EMI
-  - REI
-- Adds ExtendedAE **ME Void Cell** support:
-  - Void Cell uses the same condenser recipe data
-  - Reworked Void Cell GUI (single mode button + output selector)
-  - Void Cell item tooltip is synced to current selected output
+## 物质聚合器
 
-## Recipe Format
+- 可以在 GUI 里直接切换产物。
+- `>` 按钮可打开选择窗口，按列表选目标产物。
 
-Recipe location example:
+![Matter Condenser GUI](images/matter_condenser_gui.png)
 
-- `data/ae2_matter_condenser_recipe/recipe/condenser/matter_ball.json`
+## 选择窗口
 
-Schema:
+- 产物列表支持滚动，产物多时也能正常浏览。
+
+![Condenser Selector](images/selector_output.png)
+
+## 支持 ME虚空元件
+
+![Void Cell GUI](images/void_cell_compat.png)
+
+## JEI / EMI / REI 适配
+
+- 配方页面已适配，会按当前配方数据展示内容。
+- JEI 兼容需要 [AE2 JEI Integration](https://www.curseforge.com/minecraft/mc-mods/ae2-jei-integration) 模组
+
+![Recipe Viewer Compatibility](images/xei_compat.png)
+
+---
+
+## 配方示例
 
 ```json
 {
-  "type": "ae2_matter_condenser_recipe:condenser",
+  "type": "ae2mcr:condenser",
   "result": {
-    "id": "ae2:matter_ball",
+    "id": "minecraft:iron_ingot",
     "count": 1
   },
-  "required_power": 256
+  "required_power": 1024
 }
 ```
 
-Notes:
+## 支持 KubeJS 编写配方
 
-- `required_power` is the amount needed before output is produced.
-- There is no `input` field; condenser/void cell logic is output+power driven.
-
-## Build
-
-```bash
-./gradlew build -x test
+```js
+ServerEvents.recipes((event) => {
+  event.recipes.ae2mcr.condenser('minecraft:diamond', 8192)
+})
 ```
-
-Client run:
-
-```bash
-./gradlew runClient
-```
-
-## Compatibility Notes
-
-- Requires AE2 on 1.21.1 NeoForge environment.
-- JEI integration depends on AE2 JEI Integration being present.
-- EMI/REI hooks are implemented with mixins against AE2 integration modules.
-- Viewer-side condenser recipe lists exclude trash entries by design.

@@ -1,0 +1,11 @@
+{
+  "gui.ae2mcr.condenser.select_output": "选择输出",
+  "gui.ae2mcr.condenser.open_selector": ">",
+  "gui.ae2mcr.condenser.select_output_button": "打开输出选择器",
+  "gui.ae2mcr.condenser.no_recipes": "未找到配方",
+  "gui.ae2mcr.condenser.trash": "销毁",
+  "gui.ae2mcr.condenser.required_power": "所需物质: %s",
+  "gui.ae2mcr.condenser.required_power_tooltip": "%s (所需物质: %s)",
+  "gui.ae2mcr.common.back": "返回",
+  "gui.ae2mcr.void_cell.mode": "模式: %s"
+}

@@ -8,7 +8,7 @@
   "text": {
     "dialog_title": {
       "text": {
-        "translate": "gui.ae2_matter_condenser_recipe.condenser.select_output"
+        "translate": "gui.ae2mcr.condenser.select_output"
       },
       "position": {
         "left": 8,
