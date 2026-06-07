@@ -154,7 +154,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
     }
 
     public static CondenserRecipe pickByIdOrFirst(Level level, ResourceLocation id) {
-        var all = level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get());
+        var all = CondenserRecipeSelectionService.listRecipeHolders(level);
         if (all.isEmpty()) {
             return null;
         }
@@ -171,19 +171,11 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
     }
 
     public static CondenserRecipe findById(Level level, ResourceLocation id) {
-        return level == null ? null : findById(level.getRecipeManager(), id);
+        return CondenserRecipeSelectionService.findRecipe(level, id);
     }
 
     public static CondenserRecipe findById(RecipeManager recipeManager, ResourceLocation id) {
-        if (id == null) {
-            return null;
-        }
-        for (var holder : recipeManager.getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get())) {
-            if (holder.id().equals(id)) {
-                return holder.value();
-            }
-        }
-        return null;
+        return CondenserRecipeSelectionService.findRecipe(recipeManager, id);
     }
 
     public static List<ResourceLocation> listIds(Level level) {
@@ -191,7 +183,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
     }
 
     public static List<ResourceLocation> listIds(RecipeManager recipeManager) {
-        return recipeManager.getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get())
+        return CondenserRecipeSelectionService.listRecipeHolders(recipeManager)
                 .stream()
                 .map(holder -> holder.id())
                 .toList();

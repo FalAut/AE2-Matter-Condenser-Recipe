@@ -3,10 +3,9 @@ package com.falaut.ae2mcr.integration;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.config.DefaultCatalystConfig;
 import com.falaut.ae2mcr.recipe.CondenserRecipe;
-import com.falaut.ae2mcr.registry.ModRecipeTypes;
+import com.falaut.ae2mcr.recipe.CondenserRecipeSelectionService;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -20,44 +19,11 @@ public final class CondenserViewerRecipes {
     }
 
     public static List<CondenserViewerRecipe> list(Level level) {
-        var out = new ArrayList<CondenserViewerRecipe>();
-        out.add(new CondenserViewerRecipe(
-                CondenserSelectionState.TRASH_ID,
-                ItemStack.EMPTY,
-                CondenserOutput.TRASH.requiredPower,
-                viableStorageComponents(CondenserOutput.TRASH.requiredPower)));
-
-        if (level == null) {
-            return out;
-        }
-
-        for (var holder : level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get())) {
-            var recipe = holder.value();
-            out.add(new CondenserViewerRecipe(
-                    holder.id(),
-                    recipe.getOutputCopy(),
-                    recipe.getRequiredPower(),
-                    recipe.getCatalystPreviewStacks()));
-        }
-        return out;
+        return level == null ? List.of(trashRecipe()) : list(level.getRecipeManager(), true);
     }
 
     public static List<CondenserViewerRecipe> list(RecipeManager recipeManager) {
-        var out = new ArrayList<CondenserViewerRecipe>();
-        out.add(new CondenserViewerRecipe(
-                CondenserSelectionState.TRASH_ID,
-                ItemStack.EMPTY,
-                CondenserOutput.TRASH.requiredPower,
-                viableStorageComponents(CondenserOutput.TRASH.requiredPower)));
-        for (var holder : recipeManager.getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get())) {
-            var recipe = holder.value();
-            out.add(new CondenserViewerRecipe(
-                    holder.id(),
-                    recipe.getOutputCopy(),
-                    recipe.getRequiredPower(),
-                    recipe.getCatalystPreviewStacks()));
-        }
-        return out;
+        return list(recipeManager, true);
     }
 
     public static List<CondenserViewerRecipe> listWithoutTrash(Level level) {
@@ -68,42 +34,28 @@ public final class CondenserViewerRecipes {
     }
 
     public static List<CondenserViewerRecipe> listWithoutTrash(RecipeManager recipeManager) {
-        var out = new ArrayList<CondenserViewerRecipe>();
-        for (var holder : recipeManager.getAllRecipesFor(ModRecipeTypes.CONDENSER_RECIPE.get())) {
-            var recipe = holder.value();
-            out.add(new CondenserViewerRecipe(
-                    holder.id(),
-                    recipe.getOutputCopy(),
-                    recipe.getRequiredPower(),
-                    recipe.getCatalystPreviewStacks()));
-        }
-        return out;
+        return list(recipeManager, false);
     }
 
     public static CondenserViewerRecipe find(Level level, ResourceLocation id) {
-        if (CondenserSelectionState.isTrash(id)) {
-            return new CondenserViewerRecipe(
-                    CondenserSelectionState.TRASH_ID,
-                    ItemStack.EMPTY,
-                    CondenserOutput.TRASH.requiredPower,
-                    viableStorageComponents(CondenserOutput.TRASH.requiredPower));
+        if (CondenserRecipeSelectionService.isTrash(id)) {
+            return trashRecipe();
         }
 
         if (level == null) {
             return null;
         }
 
-        CondenserRecipe recipe = CondenserRecipe.findById(level, id);
+        CondenserRecipe recipe = CondenserRecipeSelectionService.findRecipe(level, id);
         if (recipe == null) {
             return null;
         }
 
-        return new CondenserViewerRecipe(id, recipe.getOutputCopy(), recipe.getRequiredPower(),
-                recipe.getCatalystPreviewStacks());
+        return toViewerRecipe(id, recipe);
     }
 
     public static Component displayName(CondenserViewerRecipe recipe) {
-        if (recipe == null || CondenserSelectionState.isTrash(recipe.id())) {
+        if (recipe == null || CondenserRecipeSelectionService.isTrash(recipe.id())) {
             return Component.translatable("gui.ae2mcr.condenser.trash");
         }
 
@@ -120,5 +72,32 @@ public final class CondenserViewerRecipes {
 
     public static List<ItemStack> viableStorageComponents(int requiredPower) {
         return DefaultCatalystConfig.previewStacks(requiredPower);
+    }
+
+    private static List<CondenserViewerRecipe> list(RecipeManager recipeManager, boolean includeTrash) {
+        var out = new ArrayList<CondenserViewerRecipe>();
+        if (includeTrash) {
+            out.add(trashRecipe());
+        }
+        for (var holder : CondenserRecipeSelectionService.listRecipeHolders(recipeManager)) {
+            out.add(toViewerRecipe(holder.id(), holder.value()));
+        }
+        return List.copyOf(out);
+    }
+
+    private static CondenserViewerRecipe toViewerRecipe(ResourceLocation id, CondenserRecipe recipe) {
+        return new CondenserViewerRecipe(
+                id,
+                recipe.getOutputCopy(),
+                recipe.getRequiredPower(),
+                recipe.getCatalystPreviewStacks());
+    }
+
+    private static CondenserViewerRecipe trashRecipe() {
+        return new CondenserViewerRecipe(
+                CondenserRecipeSelectionService.TRASH_ID,
+                ItemStack.EMPTY,
+                CondenserOutput.TRASH.requiredPower,
+                viableStorageComponents(CondenserOutput.TRASH.requiredPower));
     }
 }

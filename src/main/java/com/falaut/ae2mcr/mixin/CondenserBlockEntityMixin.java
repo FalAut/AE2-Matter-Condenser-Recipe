@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.api.CondenserSelectionHost;
 import com.falaut.ae2mcr.recipe.CondenserRecipe;
+import com.falaut.ae2mcr.recipe.CondenserRecipeSelectionService;
 import com.fish_dan_.data_energistics.accessor.CondenserBlockEntityAccessor;
 
 import net.minecraft.core.HolderLookup;
@@ -54,7 +55,7 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
         if (level == null) {
             return CondenserSelectionState.TRASH_ID;
         }
-        ae2mcr$selectedRecipeId = CondenserSelectionState.normalizeSelected(level, ae2mcr$selectedRecipeId);
+        ae2mcr$selectedRecipeId = CondenserRecipeSelectionService.normalizeSelected(level, ae2mcr$selectedRecipeId);
         return ae2mcr$selectedRecipeId;
     }
 
@@ -64,7 +65,7 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
         if (level == null || CondenserSelectionState.isTrash(ae2mcr$getNormalizedSelectedId())) {
             return null;
         }
-        return CondenserRecipe.findById(level, ae2mcr$selectedRecipeId);
+        return CondenserRecipeSelectionService.findRecipe(level, ae2mcr$selectedRecipeId);
     }
 
     @Inject(method = "saveAdditional", at = @At("TAIL"))
@@ -124,10 +125,15 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
     }
 
     @Override
+    public Level ae2mcr$getCondenserLevel() {
+        return ae2mcr$level();
+    }
+
+    @Override
     public void ae2mcr$setSelectedCondenserRecipeId(ResourceLocation id) {
         Level level = ae2mcr$level();
         if (level != null) {
-            ae2mcr$selectedRecipeId = CondenserSelectionState.normalizeSelected(level, id);
+            ae2mcr$selectedRecipeId = CondenserRecipeSelectionService.normalizeSelected(level, id);
         } else {
             ae2mcr$selectedRecipeId = CondenserSelectionState.TRASH_ID;
         }
@@ -138,30 +144,6 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
             addPower(storage - getStoredPower());
         }
         addPower(0);
-    }
-
-    @Override
-    public List<ResourceLocation> ae2mcr$getAvailableCondenserRecipeIds() {
-        Level level = ae2mcr$level();
-        if (level == null) {
-            return List.of(CondenserSelectionState.TRASH_ID);
-        }
-        return CondenserSelectionState.listSelectableIds(level);
-    }
-
-    @Override
-    public ItemStack ae2mcr$getCondenserRecipeOutputPreview(ResourceLocation id) {
-        Level level = ae2mcr$level();
-        if (level == null) {
-            return ItemStack.EMPTY;
-        }
-        return CondenserSelectionState.preview(level, id);
-    }
-
-    @Override
-    public int ae2mcr$getCondenserRequiredPower(ResourceLocation id) {
-        Level level = ae2mcr$level();
-        return CondenserSelectionState.requiredPower(level, id);
     }
 
     @Unique

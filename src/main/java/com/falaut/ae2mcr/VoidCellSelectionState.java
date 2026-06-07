@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.falaut.ae2mcr.recipe.CondenserRecipe;
+import com.falaut.ae2mcr.recipe.CondenserRecipeSelectionService;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -41,9 +42,7 @@ public final class VoidCellSelectionState {
 
     public static void writeResolvedSelection(ItemStack stack, RecipeManager recipeManager, ResourceLocation id) {
         ResourceLocation normalized = normalizeSelected(recipeManager, id);
-        CondenserRecipe recipe = CondenserSelectionState.isTrash(normalized)
-                ? null
-                : CondenserRecipe.findById(recipeManager, normalized);
+        CondenserRecipe recipe = CondenserRecipeSelectionService.findRecipe(recipeManager, normalized);
         writeResolvedSelection(stack, normalized, recipe);
     }
 
@@ -100,16 +99,10 @@ public final class VoidCellSelectionState {
     }
 
     public static List<ResourceLocation> listSelectableIds(RecipeManager recipeManager) {
-        var ids = new ArrayList<ResourceLocation>();
-        ids.add(CondenserSelectionState.TRASH_ID);
-        ids.addAll(CondenserRecipe.listIds(recipeManager));
-        return ids;
+        return CondenserRecipeSelectionService.listSelectableIds(recipeManager);
     }
 
     public static ResourceLocation normalizeSelected(RecipeManager recipeManager, ResourceLocation id) {
-        if (CondenserSelectionState.isTrash(id)) {
-            return CondenserSelectionState.TRASH_ID;
-        }
-        return CondenserRecipe.findById(recipeManager, id) == null ? CondenserSelectionState.TRASH_ID : id;
+        return CondenserRecipeSelectionService.normalizeSelected(recipeManager, id);
     }
 }

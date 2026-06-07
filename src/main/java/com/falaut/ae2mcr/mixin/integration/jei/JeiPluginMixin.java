@@ -1,8 +1,6 @@
 package com.falaut.ae2mcr.mixin.integration.jei;
 
 import java.util.List;
-import java.util.Objects;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,7 +28,11 @@ public abstract class JeiPluginMixin {
             RecipeType recipeType,
             List recipes) {
         if ("ae2:condenser".equals(recipeType.getUid().toString())) {
-            var level = Objects.requireNonNull(Minecraft.getInstance().level);
+            var level = Minecraft.getInstance().level;
+            if (level == null) {
+                registration.addRecipes(recipeType, recipes);
+                return;
+            }
             List<CondenserViewerRecipe> viewerRecipes = CondenserViewerRecipes.listWithoutTrash(level);
             registration.addRecipes((RecipeType) recipeType, (List) viewerRecipes);
             return;

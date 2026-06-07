@@ -1,7 +1,9 @@
 package com.falaut.ae2mcr.config;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +94,7 @@ public final class DefaultCatalystConfig {
         return null;
     }
 
-    private static DefaultCatalystEntry parseEntry(String raw) {
+    static DefaultCatalystEntry parseEntry(String raw) {
         int separator = raw.lastIndexOf('=');
         if (separator <= 0 || separator >= raw.length() - 1) {
             LOGGER.warn("Ignoring invalid default catalyst entry '{}'", raw);
@@ -121,17 +123,21 @@ public final class DefaultCatalystConfig {
         return new DefaultCatalystEntry(itemId, storage);
     }
 
-    private static List<DefaultCatalystEntry> parseEntries(List<? extends String> rawEntries) {
-        var parsed = new ArrayList<DefaultCatalystEntry>();
+    static List<DefaultCatalystEntry> parseEntries(List<? extends String> rawEntries) {
+        Map<ResourceLocation, DefaultCatalystEntry> parsed = new LinkedHashMap<>();
         for (var raw : rawEntries) {
             var entry = parseEntry(String.valueOf(raw));
             if (entry != null) {
-                parsed.add(entry);
+                if (parsed.containsKey(entry.itemId())) {
+                    LOGGER.warn("Duplicate default catalyst entry for '{}', keeping the later value.", entry.itemId());
+                    parsed.remove(entry.itemId());
+                }
+                parsed.put(entry.itemId(), entry);
             }
         }
-        return List.copyOf(parsed);
+        return List.copyOf(parsed.values());
     }
 
-    private record DefaultCatalystEntry(ResourceLocation itemId, int storage) {
+    record DefaultCatalystEntry(ResourceLocation itemId, int storage) {
     }
 }

@@ -1,8 +1,5 @@
 package com.falaut.ae2mcr.mixin.integration.extendedae;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -13,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.VoidCellSelectionState;
 import com.falaut.ae2mcr.api.VoidCellMenuBridge;
+import com.falaut.ae2mcr.recipe.CondenserRecipeSelectionService;
 
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
@@ -27,9 +25,6 @@ public abstract class ContainerVoidCellMixin extends AEBaseMenu implements VoidC
 
     @GuiSync(11)
     public ResourceLocation ae2mcr$selectedRecipeId = CondenserSelectionState.TRASH_ID;
-
-    @GuiSync(12)
-    public String ae2mcr$availableRecipeIdsCsv = "";
 
     @Unique
     private static final String AE2MCR_ACTION_SELECT_RECIPE = "ae2mcr_select_recipe";
@@ -55,7 +50,6 @@ public abstract class ContainerVoidCellMixin extends AEBaseMenu implements VoidC
         Level level = ae2mcr$getMenuLevel();
         if (level == null) {
             ae2mcr$selectedRecipeId = CondenserSelectionState.TRASH_ID;
-            ae2mcr$availableRecipeIdsCsv = CondenserSelectionState.TRASH_ID.toString();
             return;
         }
 
@@ -64,12 +58,6 @@ public abstract class ContainerVoidCellMixin extends AEBaseMenu implements VoidC
                 VoidCellSelectionState.readSelectedRecipeId(stack));
         VoidCellSelectionState.writeResolvedSelection(stack, level.getRecipeManager(), selected);
         ae2mcr$selectedRecipeId = selected;
-
-        ae2mcr$availableRecipeIdsCsv = String.join(",",
-                VoidCellSelectionState.listSelectableIds(level.getRecipeManager())
-                        .stream()
-                        .map(ResourceLocation::toString)
-                        .toList());
     }
 
     @Unique
@@ -98,22 +86,12 @@ public abstract class ContainerVoidCellMixin extends AEBaseMenu implements VoidC
             return;
         }
 
-        List<ResourceLocation> ids = VoidCellSelectionState.listSelectableIds(level.getRecipeManager());
-        if (ids.isEmpty()) {
-            return;
-        }
-
-        ResourceLocation current = VoidCellSelectionState.normalizeSelected(
-                level.getRecipeManager(),
-                VoidCellSelectionState.readSelectedRecipeId(stack));
-        int index = ids.indexOf(current);
-        if (index < 0) {
-            index = 0;
-        }
-
         boolean backwards = backwardsArg != null && backwardsArg;
-        int nextIndex = backwards ? (index - 1 + ids.size()) % ids.size() : (index + 1) % ids.size();
-        VoidCellSelectionState.writeResolvedSelection(stack, level.getRecipeManager(), ids.get(nextIndex));
+        ResourceLocation nextId = CondenserRecipeSelectionService.cycleSelection(
+                level.getRecipeManager(),
+                VoidCellSelectionState.readSelectedRecipeId(stack),
+                backwards);
+        VoidCellSelectionState.writeResolvedSelection(stack, level.getRecipeManager(), nextId);
         broadcastChanges();
     }
 
@@ -135,32 +113,6 @@ public abstract class ContainerVoidCellMixin extends AEBaseMenu implements VoidC
     @Override
     public ResourceLocation ae2mcr$getSelectedRecipeId() {
         return ae2mcr$selectedRecipeId == null ? CondenserSelectionState.TRASH_ID : ae2mcr$selectedRecipeId;
-    }
-
-    @Override
-    public List<ResourceLocation> ae2mcr$getAvailableRecipeIds() {
-        if (ae2mcr$availableRecipeIdsCsv == null || ae2mcr$availableRecipeIdsCsv.isBlank()) {
-            return List.of(CondenserSelectionState.TRASH_ID);
-        }
-
-        List<ResourceLocation> out = new ArrayList<>();
-        for (var raw : ae2mcr$availableRecipeIdsCsv.split(",")) {
-            var id = ResourceLocation.tryParse(raw);
-            if (id != null) {
-                out.add(id);
-            }
-        }
-        return out;
-    }
-
-    @Override
-    public ItemStack ae2mcr$getPreview(ResourceLocation id) {
-        return CondenserSelectionState.preview(ae2mcr$getMenuLevel(), id);
-    }
-
-    @Override
-    public int ae2mcr$getRequiredPower(ResourceLocation id) {
-        return CondenserSelectionState.requiredPower(ae2mcr$getMenuLevel(), id);
     }
 
     @Override
