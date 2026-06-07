@@ -39,6 +39,7 @@ jobs:
         env:
           CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
           CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_GAME_VERSIONS: ${{ vars.CURSEFORGE_GAME_VERSIONS }}
         run: |
           set -euo pipefail
           if [[ -z "${CURSEFORGE_API_TOKEN}" ]]; then
@@ -47,6 +48,10 @@ jobs:
           fi
           if [[ -z "${CURSEFORGE_PROJECT_ID}" ]]; then
             echo "Missing variable: CURSEFORGE_PROJECT_ID" >&2
+            exit 1
+          fi
+          if [[ -z "${CURSEFORGE_GAME_VERSIONS}" ]]; then
+            echo "Missing variable: CURSEFORGE_GAME_VERSIONS" >&2
             exit 1
           fi
 
@@ -105,7 +110,7 @@ jobs:
             esac
           fi
 
-          display_name="${RELEASE_NAME:-${REF_NAME:-${{ steps.artifact.outputs.jar_name }}}}"
+          display_name="${RELEASE_NAME:-${version}}"
           changelog="$(awk -v version="${version}" '
             $0 ~ "^## \\[" version "\\]" { capture=1; next }
             capture && $0 ~ "^## \\[" { exit }
