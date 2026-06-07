@@ -65,9 +65,7 @@ public abstract class JeiCondenserCategoryMixin {
             builder.addOutputSlot(57, 27).addItemStack(output);
         }
 
-        List<net.minecraft.world.item.ItemStack> catalysts = CondenserViewerRecipes
-                .viableStorageComponents(recipe.requiredPower());
-        builder.addSlot(RecipeIngredientRole.CATALYST, 53, 1).addItemStacks(catalysts);
+        builder.addSlot(RecipeIngredientRole.CATALYST, 53, 1).addItemStacks(recipe.catalysts());
         ci.cancel();
     }
 

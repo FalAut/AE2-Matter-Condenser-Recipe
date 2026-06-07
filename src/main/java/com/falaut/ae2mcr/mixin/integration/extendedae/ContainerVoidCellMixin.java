@@ -1,4 +1,4 @@
-package com.falaut.ae2mcr.mixin.extendedae;
+package com.falaut.ae2mcr.mixin.integration.extendedae;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.VoidCellSelectionState;
 import com.falaut.ae2mcr.api.VoidCellMenuBridge;
-import com.falaut.ae2mcr.recipe.CondenserRecipe;
 
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;

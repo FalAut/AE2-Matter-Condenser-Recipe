@@ -17,11 +17,7 @@ public class CondenserEmiRecipe extends BasicEmiRecipe {
     public CondenserEmiRecipe(EmiRecipeCategory category, CondenserViewerRecipe recipe) {
         super(category, recipe.id(), 96, 48);
         this.recipe = recipe;
-        this.viableStorageComponents = EmiIngredient.of(
-                CondenserViewerRecipes.viableStorageComponents(recipe.requiredPower())
-                        .stream()
-                        .map(EmiStack::of)
-                        .toList());
+        this.viableStorageComponents = EmiIngredient.of(recipe.catalysts().stream().map(EmiStack::of).toList());
         this.catalysts.add(this.viableStorageComponents);
         if (!recipe.output().isEmpty()) {
             this.outputs.add(EmiStack.of(recipe.output()));

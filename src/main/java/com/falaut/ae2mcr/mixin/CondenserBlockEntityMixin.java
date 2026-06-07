@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.api.CondenserSelectionHost;
 import com.falaut.ae2mcr.recipe.CondenserRecipe;
+import com.fish_dan_.data_energistics.accessor.CondenserBlockEntityAccessor;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import appeng.util.inv.AppEngInternalInventory;
 
 @Mixin(targets = "appeng.blockentity.misc.CondenserBlockEntity")
 public abstract class CondenserBlockEntityMixin implements CondenserSelectionHost {
@@ -31,6 +33,9 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
 
     @Shadow
     public abstract void addPower(double rawPower);
+
+    @Shadow
+    private AppEngInternalInventory storageSlot;
 
     @Unique
     private static final String AE2MCR_SELECTED_RECIPE_NBT = "ae2mcrSelectedCondenserRecipe";
@@ -77,12 +82,19 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
         } else {
             ae2mcr$selectedRecipeId = CondenserSelectionState.TRASH_ID;
         }
+        ae2mcr$disableDataEnergisticsMode();
     }
 
     @Inject(method = "getOutput", at = @At("HEAD"), cancellable = true)
     private void ae2mcr$getOutputFromRecipe(CallbackInfoReturnable<ItemStack> cir) {
         var recipe = ae2mcr$getSelectedRecipeStrict();
-        cir.setReturnValue(recipe == null ? ItemStack.EMPTY : recipe.getOutputCopy());
+        if (recipe == null) {
+            cir.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
+
+        ItemStack catalyst = this.storageSlot.getStackInSlot(0);
+        cir.setReturnValue(recipe.acceptsCatalyst(catalyst) ? recipe.getOutputCopy() : ItemStack.EMPTY);
     }
 
     @Inject(method = "getRequiredPower", at = @At("HEAD"), cancellable = true)
@@ -93,6 +105,17 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
             return;
         }
         cir.setReturnValue((double) CondenserSelectionState.requiredPower(level, ae2mcr$getNormalizedSelectedId()));
+    }
+
+    @Inject(method = "getStorage", at = @At("HEAD"), cancellable = true)
+    private void ae2mcr$restrictStorageByCatalyst(CallbackInfoReturnable<Double> cir) {
+        var recipe = ae2mcr$getSelectedRecipeStrict();
+        if (recipe == null) {
+            return;
+        }
+
+        ItemStack catalyst = this.storageSlot.getStackInSlot(0);
+        cir.setReturnValue((double) recipe.getCatalystStorage(catalyst));
     }
 
     @Override
@@ -108,6 +131,7 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
         } else {
             ae2mcr$selectedRecipeId = CondenserSelectionState.TRASH_ID;
         }
+        ae2mcr$disableDataEnergisticsMode();
         ((BlockEntity) (Object) this).setChanged();
         var storage = getStorage();
         if (getStoredPower() > storage) {
@@ -138,5 +162,12 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
     public int ae2mcr$getCondenserRequiredPower(ResourceLocation id) {
         Level level = ae2mcr$level();
         return CondenserSelectionState.requiredPower(level, id);
+    }
+
+    @Unique
+    private void ae2mcr$disableDataEnergisticsMode() {
+        if ((Object) this instanceof CondenserBlockEntityAccessor accessor) {
+            accessor.dataEnergistics$setDataCaptureBallMode(false);
+        }
     }
 }

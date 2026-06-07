@@ -1,4 +1,4 @@
-package com.falaut.ae2mcr.mixin.extendedae;
+package com.falaut.ae2mcr.mixin.integration.extendedae;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

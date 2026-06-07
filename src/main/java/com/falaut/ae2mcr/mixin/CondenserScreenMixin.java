@@ -1,5 +1,7 @@
 package com.falaut.ae2mcr.mixin;
 
+import java.util.List;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +13,8 @@ import com.falaut.ae2mcr.api.CondenserMenuBridge;
 import com.falaut.ae2mcr.client.CondenserModeButton;
 import com.falaut.ae2mcr.client.CondenserRecipeSelectionScreen;
 
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import appeng.client.gui.AEBaseScreen;
@@ -21,6 +25,10 @@ import appeng.menu.implementations.CondenserMenu;
 
 @Mixin(targets = "appeng.client.gui.implementations.CondenserScreen")
 public abstract class CondenserScreenMixin extends AEBaseScreen<CondenserMenu> {
+    @Unique
+    private static final String AE2MCR_DATAE_MODE_BUTTON_CLASS =
+            "com.fish_dan_.data_energistics.client.widget.CondenserOutputModeButton";
+
     @Unique
     private CondenserModeButton ae2mcr$modeButton;
 
@@ -59,6 +67,7 @@ public abstract class CondenserScreenMixin extends AEBaseScreen<CondenserMenu> {
             return;
         }
 
+        ae2mcr$removeDataECondenserButton();
         ae2mcr$modeButton.refreshFromMenu();
 
         if (!this.children().contains(ae2mcr$modeButton)) {
@@ -72,5 +81,22 @@ public abstract class CondenserScreenMixin extends AEBaseScreen<CondenserMenu> {
         ae2mcr$modeButton.setSize(16, 16);
         ae2mcr$openSelectorButton.setPosition(this.leftPos + 151, this.topPos + 53);
         ae2mcr$openSelectorButton.setSize(18, 18);
+    }
+
+    @Unique
+    private void ae2mcr$removeDataECondenserButton() {
+        AbstractWidget removed = ((WidgetContainerAccessor) this.widgets).ae2mcr$getWidgets().remove("mode");
+        if (removed != null && AE2MCR_DATAE_MODE_BUTTON_CLASS.equals(removed.getClass().getName())) {
+            removeWidget(removed);
+            ((ScreenAccessor) this).ae2mcr$getRenderables().remove(removed);
+        }
+
+        for (var child : List.copyOf(this.children())) {
+            if (child instanceof AbstractWidget widget
+                    && AE2MCR_DATAE_MODE_BUTTON_CLASS.equals(widget.getClass().getName())) {
+                removeWidget(widget);
+                ((ScreenAccessor) this).ae2mcr$getRenderables().remove(widget);
+            }
+        }
     }
 }

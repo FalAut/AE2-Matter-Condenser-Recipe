@@ -16,7 +16,7 @@ public class CondenserReiDisplay extends appeng.integration.modules.rei.Condense
     public CondenserReiDisplay(CondenserViewerRecipe recipe) {
         super(CondenserOutput.TRASH);
         this.recipe = recipe;
-        this.viableStorageComponents = CondenserViewerRecipes.viableStorageComponents(recipe.requiredPower())
+        this.viableStorageComponents = recipe.catalysts()
                 .stream()
                 .map(EntryStacks::of)
                 .toList();

@@ -4,15 +4,22 @@
   "package": "com.falaut.ae2mcr.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AppEngSlotAccessor",
     "CondenserBlockEntityMixin",
     "CondenserMenuMixin",
-    "extendedae.ContainerVoidCellMixin",
-    "extendedae.ItemVoidCellMixin",
-    "extendedae.VoidCellInventoryMixin"
+    "RestrictedInputSlotMixin",
+    "integration.dataenergistics.DataCaptureBallCondenserGuideRecipeMappingsMixin",
+    "integration.extendedae.ContainerVoidCellMixin",
+    "integration.extendedae.ItemVoidCellMixin",
+    "integration.extendedae.VoidCellInventoryMixin"
   ],
   "client": [
     "CondenserScreenMixin",
-    "extendedae.GuiVoidCellMixin",
+    "ScreenAccessor",
+    "WidgetContainerAccessor",
+    "integration.dataenergistics.DataEnergisticsEmiPluginMixin",
+    "integration.dataenergistics.DataEnergisticsJeiPluginMixin",
+    "integration.extendedae.GuiVoidCellMixin",
     "integration.emi.AppEngEmiPluginMixin",
     "integration.jei.JeiCondenserCategoryMixin",
     "integration.jei.JeiPluginMixin",

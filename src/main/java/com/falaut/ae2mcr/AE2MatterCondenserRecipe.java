@@ -1,5 +1,6 @@
 package com.falaut.ae2mcr;
 
+import com.falaut.ae2mcr.config.ConfigHolder;
 import com.falaut.ae2mcr.registry.ModRecipeSerializers;
 import com.falaut.ae2mcr.registry.ModRecipeTypes;
 
@@ -12,6 +13,7 @@ public class AE2MatterCondenserRecipe {
     public static final String MOD_ID = "ae2mcr";
 
     public AE2MatterCondenserRecipe(IEventBus modBus, ModContainer modContainer) {
+        ConfigHolder.init(modContainer);
         ModRecipeTypes.RECIPE_TYPES.register(modBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
     }

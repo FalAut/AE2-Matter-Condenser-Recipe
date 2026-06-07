@@ -1,0 +1,34 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "data_energistics"
+    }
+  ],
+  "type": "ae2mcr:condenser",
+  "catalyst": [
+    {
+      "ingredient": {
+        "item": "data_energistics:data_storage_component_16k"
+      },
+      "storage": 131072
+    },
+    {
+      "ingredient": {
+        "item": "data_energistics:data_storage_component_64k"
+      },
+      "storage": 524288
+    },
+    {
+      "ingredient": {
+        "item": "data_energistics:data_storage_component_256k"
+      },
+      "storage": 2097152
+    }
+  ],
+  "result": {
+    "id": "data_energistics:data_capture_ball",
+    "count": 1
+  },
+  "required_power": 131072
+}
