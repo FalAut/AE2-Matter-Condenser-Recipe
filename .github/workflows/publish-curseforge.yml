@@ -38,7 +38,7 @@ jobs:
         shell: bash
         env:
           CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
-          CURSEFORGE_PROJECT_ID: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
         run: |
           set -euo pipefail
           if [[ -z "${CURSEFORGE_API_TOKEN}" ]]; then
@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
           if [[ -z "${CURSEFORGE_PROJECT_ID}" ]]; then
-            echo "Missing secret: CURSEFORGE_PROJECT_ID" >&2
+            echo "Missing variable: CURSEFORGE_PROJECT_ID" >&2
             exit 1
           fi
 
