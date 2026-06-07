@@ -1,0 +1,119 @@
+name: Build And Publish To CurseForge
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: CurseForge release type
+        required: false
+        default: release
+        type: choice
+        options:
+          - release
+          - beta
+          - alpha
+      changelog:
+        description: Optional changelog override for manual runs
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CURSEFORGE_API_TOKEN != '' && secrets.CURSEFORGE_PROJECT_ID != '' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Build mod
+        run: ./gradlew build -x test
+
+      - name: Resolve built jar
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          jar_path="$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -n 1)"
+          if [[ -z "${jar_path}" ]]; then
+            echo "No built jar found in build/libs" >&2
+            exit 1
+          fi
+          echo "jar_path=${jar_path}" >> "$GITHUB_OUTPUT"
+          echo "jar_name=$(basename "${jar_path}")" >> "$GITHUB_OUTPUT"
+
+      - name: Determine release metadata
+        id: meta
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
+          INPUT_CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          set -euo pipefail
+
+          release_type="${INPUT_RELEASE_TYPE:-release}"
+          if [[ "${EVENT_NAME}" == "release" ]]; then
+            case "${{ github.event.release.prerelease }}" in
+              true) release_type="beta" ;;
+              false) release_type="release" ;;
+            esac
+          fi
+
+          display_name="${RELEASE_NAME:-${REF_NAME:-${{ steps.artifact.outputs.jar_name }}}}"
+          changelog="${INPUT_CHANGELOG:-$RELEASE_BODY}"
+
+          {
+            echo "release_type=${release_type}"
+            echo "display_name<<EOF"
+            echo "${display_name}"
+            echo "EOF"
+            echo "changelog<<EOF"
+            echo "${changelog}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.jar_name }}
+          path: ${{ steps.artifact.outputs.jar_path }}
+          if-no-files-found: error
+
+      - name: Publish to CurseForge
+        uses: itsmeow/curseforge-upload@v3.1.2
+        with:
+          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          project_id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          game_endpoint: minecraft
+          file_path: ${{ steps.artifact.outputs.jar_path }}
+          game_versions: ${{ vars.CURSEFORGE_GAME_VERSIONS }}
+          release_type: ${{ steps.meta.outputs.release_type }}
+          display_name: ${{ steps.meta.outputs.display_name }}
+          changelog: ${{ steps.meta.outputs.changelog }}
+          changelog_type: markdown
+          relations: ${{ vars.CURSEFORGE_RELATIONS }}
