@@ -8,27 +8,14 @@
         {
             "name": "required_power",
             "role": "input",
-            "type": "int"
+            "type": "non_negative_int"
         },
         {
             "name": "catalyst",
             "role": "input",
             "type": {
                 "type": "list",
-                "component": {
-                    "type": "custom_object",
-                    "keys": [
-                        {
-                            "name": "ingredient",
-                            "component": "ingredient"
-                        },
-                        {
-                            "name": "storage",
-                            "component": "int",
-                            "optional": true
-                        }
-                    ]
-                },
+                "component": "ingredient",
                 "min": 0
             },
             "optional": []

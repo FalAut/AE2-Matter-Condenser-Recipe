@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.falaut.ae2mcr.config.DefaultCatalystConfig;
+import com.mojang.datafixers.util.Either;
 import com.falaut.ae2mcr.registry.ModRecipeSerializers;
 import com.falaut.ae2mcr.registry.ModRecipeTypes;
 import com.mojang.serialization.Codec;
@@ -28,27 +29,27 @@ import net.minecraft.world.level.Level;
 import appeng.api.ids.AEComponents;
 
 public class CondenserRecipe implements Recipe<RecipeInput> {
-    private static final int DEFAULT_STORAGE = -1;
     private static final Codec<Integer> NON_NEGATIVE_INT = Codec.INT.flatXmap(
-            value -> value < 0
-                    ? DataResult.error(() -> "value must be >= 0")
+            value -> value <= 0
+                    ? DataResult.error(() -> "value must be > 0")
                     : DataResult.success(value),
             DataResult::success);
-    private static final Codec<Integer> STORAGE_CODEC = Codec.INT.flatXmap(
-            value -> value < DEFAULT_STORAGE
-                    ? DataResult.error(() -> "storage must be >= -1")
-                    : DataResult.success(value),
-            DataResult::success);
+    private static final MapCodec<LegacyCondenserCatalystEntry> LEGACY_CATALYST_CODEC = RecordCodecBuilder.mapCodec(
+            instance -> instance.group(
+                    Ingredient.CODEC_NONEMPTY.fieldOf("ingredient").forGetter(LegacyCondenserCatalystEntry::ingredient))
+                    .apply(instance, LegacyCondenserCatalystEntry::new));
+    private static final Codec<Ingredient> CATALYST_ENTRY_CODEC = Codec.either(
+            Ingredient.CODEC_NONEMPTY,
+            LEGACY_CATALYST_CODEC.codec())
+            .xmap(
+                    either -> either.map(ingredient -> ingredient, LegacyCondenserCatalystEntry::ingredient),
+                    Either::left);
 
     private final ItemStack result;
     private final int requiredPower;
-    private final List<CondenserCatalystEntry> catalysts;
+    private final List<Ingredient> catalysts;
 
-    private static final Codec<List<CondenserCatalystEntry>> CATALYST_LIST_CODEC = CondenserCatalystEntry.CODEC.codec()
-            .listOf()
-            .validate(entries -> entries.isEmpty()
-                    ? DataResult.error(() -> "catalyst list must not be empty")
-                    : DataResult.success(entries));
+    private static final Codec<List<Ingredient>> CATALYST_LIST_CODEC = CATALYST_ENTRY_CODEC.listOf();
 
     public static final MapCodec<CondenserRecipe> CODEC = RecordCodecBuilder.mapCodec(builder -> builder.group(
             ItemStack.CODEC.fieldOf("result").forGetter(CondenserRecipe::getResultTemplate),
@@ -61,14 +62,14 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
             CondenserRecipe::getResultTemplate,
             net.minecraft.network.codec.ByteBufCodecs.VAR_INT,
             CondenserRecipe::getRequiredPower,
-            ByteBufCodecs.collection(java.util.ArrayList::new, CondenserCatalystEntry.STREAM_CODEC),
+            ByteBufCodecs.collection(java.util.ArrayList::new, Ingredient.CONTENTS_STREAM_CODEC),
             CondenserRecipe::catalysts,
             CondenserRecipe::new);
 
     public CondenserRecipe(
             ItemStack result,
             int requiredPower,
-            List<CondenserCatalystEntry> catalysts) {
+            List<Ingredient> catalysts) {
         this.result = result.copy();
         this.requiredPower = requiredPower;
         this.catalysts = catalysts == null ? List.of() : List.copyOf(catalysts);
@@ -83,7 +84,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
         return requiredPower;
     }
 
-    public List<CondenserCatalystEntry> catalysts() {
+    public List<Ingredient> catalysts() {
         return this.catalysts;
     }
 
@@ -120,7 +121,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
         if (this.catalysts.isEmpty()) {
             return DefaultCatalystConfig.storageFor(stack) >= this.requiredPower;
         }
-        return this.catalysts.stream().anyMatch(entry -> entry.matchesItem(stack));
+        return this.catalysts.stream().anyMatch(entry -> !stack.isEmpty() && entry.test(stack));
     }
 
     public boolean restrictsStorage(ItemStack stack) {
@@ -128,21 +129,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
     }
 
     public int getCatalystStorage(ItemStack stack) {
-        if (!acceptsCatalyst(stack)) {
-            return 0;
-        }
-
-        if (this.catalysts.isEmpty()) {
-            return DefaultCatalystConfig.storageFor(stack);
-        }
-
-        for (var entry : this.catalysts) {
-            if (entry.matchesItem(stack)) {
-                return entry.storageValue(stack, this.requiredPower);
-            }
-        }
-
-        return 0;
+        return acceptsCatalyst(stack) ? this.requiredPower : 0;
     }
 
     public List<ItemStack> getCatalystPreviewStacks() {
@@ -150,8 +137,9 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
             return DefaultCatalystConfig.previewStacks(this.requiredPower);
         }
         return this.catalysts.stream()
-                .flatMap(entry -> entry.previewStacks(this.requiredPower).stream())
+                .flatMap(entry -> Arrays.stream(entry.getItems()))
                 .map(ItemStack::copy)
+                .filter(stack -> !stack.isEmpty())
                 .toList();
     }
 
@@ -214,38 +202,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
         return ModRecipeSerializers.CONDENSER_RECIPE.get();
     }
 
-    public record CondenserCatalystEntry(Ingredient ingredient, int storage) {
-        public static final MapCodec<CondenserCatalystEntry> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-                Ingredient.CODEC_NONEMPTY.fieldOf("ingredient").forGetter(CondenserCatalystEntry::ingredient),
-                STORAGE_CODEC.optionalFieldOf("storage", DEFAULT_STORAGE).forGetter(CondenserCatalystEntry::storage))
-                .apply(instance, CondenserCatalystEntry::new));
-
-        public static final StreamCodec<RegistryFriendlyByteBuf, CondenserCatalystEntry> STREAM_CODEC = StreamCodec.composite(
-                Ingredient.CONTENTS_STREAM_CODEC,
-                CondenserCatalystEntry::ingredient,
-                ByteBufCodecs.INT,
-                CondenserCatalystEntry::storage,
-                CondenserCatalystEntry::new);
-
-        public CondenserCatalystEntry {
-            ingredient = ingredient == null ? Ingredient.EMPTY : ingredient;
-            storage = storage < DEFAULT_STORAGE ? DEFAULT_STORAGE : storage;
-        }
-
-        public boolean matchesItem(ItemStack stack) {
-            return !stack.isEmpty() && this.ingredient.test(stack);
-        }
-
-        public int storageValue(ItemStack stack, int requiredPower) {
-            return this.storage == DEFAULT_STORAGE ? DefaultCatalystConfig.storageFor(stack) : this.storage;
-        }
-
-        public List<ItemStack> previewStacks(int requiredPower) {
-            return Arrays.stream(this.ingredient.getItems())
-                    .map(ItemStack::copy)
-                    .filter(this::matchesItem)
-                    .toList();
-        }
+    private record LegacyCondenserCatalystEntry(Ingredient ingredient) {
     }
 
     private void validateCatalysts() {
@@ -254,36 +211,11 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
         }
     }
 
-    private void validateCatalyst(CondenserCatalystEntry catalyst) {
-        if (catalyst.storage() != DEFAULT_STORAGE) {
-            if (catalyst.storage() < this.requiredPower) {
-                throw new IllegalArgumentException(
-                        "Condenser catalyst storage must be >= required_power: storage=" + catalyst.storage()
-                                + ", required_power=" + this.requiredPower);
-            }
-            return;
-        }
-
-        var items = catalyst.ingredient().getItems();
+    private void validateCatalyst(Ingredient catalyst) {
+        var items = catalyst.getItems();
         if (items.length == 0) {
             throw new IllegalArgumentException(
-                    "Condenser catalyst without storage must resolve to at least one item.");
-        }
-
-        for (var stack : items) {
-            int defaultStorage = DefaultCatalystConfig.storageFor(stack);
-            String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-            if (defaultStorage <= 0) {
-                throw new IllegalArgumentException(
-                        "Item '" + itemId
-                                + "' must define catalyst.storage explicitly because it has no default catalyst storage.");
-            }
-            if (defaultStorage < this.requiredPower) {
-                throw new IllegalArgumentException(
-                        "Default catalyst storage for item '" + itemId + "' must be >= required_power: storage="
-                                + defaultStorage + ", required_power=" + this.requiredPower
-                                + ". Set catalyst.storage explicitly or raise the default value.");
-            }
+                    "Condenser catalyst must resolve to at least one item.");
         }
     }
 }

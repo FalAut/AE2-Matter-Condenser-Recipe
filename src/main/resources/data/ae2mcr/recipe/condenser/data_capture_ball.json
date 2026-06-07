@@ -8,22 +8,13 @@
   "type": "ae2mcr:condenser",
   "catalyst": [
     {
-      "ingredient": {
-        "item": "data_energistics:data_storage_component_16k"
-      },
-      "storage": 131072
+      "item": "data_energistics:data_storage_component_16k"
     },
     {
-      "ingredient": {
-        "item": "data_energistics:data_storage_component_64k"
-      },
-      "storage": 524288
+      "item": "data_energistics:data_storage_component_64k"
     },
     {
-      "ingredient": {
-        "item": "data_energistics:data_storage_component_256k"
-      },
-      "storage": 2097152
+      "item": "data_energistics:data_storage_component_256k"
     }
   ],
   "result": {
