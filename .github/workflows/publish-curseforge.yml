@@ -144,15 +144,128 @@ jobs:
           if-no-files-found: error
 
       - name: Publish to CurseForge
-        uses: itsmeow/curseforge-upload@v3.1.2
-        with:
-          token: ${{ secrets.CURSEFORGE_API_TOKEN }}
-          project_id: ${{ vars.CURSEFORGE_PROJECT_ID }}
-          game_endpoint: minecraft
-          file_path: ${{ steps.artifact.outputs.jar_path }}
-          game_versions: ${{ vars.CURSEFORGE_GAME_VERSIONS }}
-          release_type: ${{ steps.meta.outputs.release_type }}
-          display_name: ${{ steps.meta.outputs.display_name }}
-          changelog: ${{ steps.meta.outputs.changelog }}
-          changelog_type: markdown
-          relations: ${{ vars.CURSEFORGE_RELATIONS }}
+        shell: bash
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          CURSEFORGE_GAME_VERSIONS: ${{ vars.CURSEFORGE_GAME_VERSIONS }}
+          CURSEFORGE_RELATIONS: ${{ vars.CURSEFORGE_RELATIONS }}
+          FILE_PATH: ${{ steps.artifact.outputs.jar_path }}
+          RELEASE_TYPE: ${{ steps.meta.outputs.release_type }}
+          DISPLAY_NAME: ${{ steps.meta.outputs.display_name }}
+          CHANGELOG: ${{ steps.meta.outputs.changelog }}
+        run: |
+          set -euo pipefail
+
+          game_versions_json="$(curl -fsSL \
+            -H "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
+            https://minecraft.curseforge.com/api/game/versions)"
+
+          resolve_version_id() {
+            local raw="$1"
+            local type_name=""
+            local version_name="$raw"
+
+            if [[ "$raw" == *:* ]]; then
+              type_name="${raw%%:*}"
+              version_name="${raw#*:}"
+            fi
+
+            local resolved_id=""
+            if [[ -n "$type_name" ]]; then
+              resolved_id="$(jq -r \
+                --arg type_name "$type_name" \
+                --arg version_name "$version_name" '
+                  map(select(
+                    ((.gameVersionTypeID | tostring) == $type_name) or
+                    (.gameVersionTypeIDName? == $type_name) or
+                    (.gameVersionTypeName? == $type_name)
+                  ) | select(.name == $version_name or .slug == $version_name))
+                  | .[0].id // empty
+                ' <<<"$game_versions_json")"
+            fi
+
+            if [[ -z "$resolved_id" ]]; then
+              resolved_id="$(jq -r \
+                --arg version_name "$version_name" '
+                  map(select(.name == $version_name or .slug == $version_name))
+                  | .[0].id // empty
+                ' <<<"$game_versions_json")"
+            fi
+
+            if [[ -z "$resolved_id" && "$version_name" =~ ^[0-9]+$ ]]; then
+              resolved_id="$version_name"
+            fi
+
+            if [[ -z "$resolved_id" || "$resolved_id" == "null" ]]; then
+              echo "Failed to resolve CurseForge game version: $raw" >&2
+              exit 1
+            fi
+
+            printf '%s' "$resolved_id"
+          }
+
+          IFS=',' read -r -a requested_versions <<<"${CURSEFORGE_GAME_VERSIONS}"
+          game_version_ids=()
+          for version in "${requested_versions[@]}"; do
+            trimmed="$(echo "$version" | xargs)"
+            [[ -z "$trimmed" ]] && continue
+            game_version_ids+=("$(resolve_version_id "$trimmed")")
+          done
+
+          if [[ ${#game_version_ids[@]} -eq 0 ]]; then
+            echo "No CurseForge game versions resolved from CURSEFORGE_GAME_VERSIONS" >&2
+            exit 1
+          fi
+
+          relations_json="null"
+          if [[ -n "${CURSEFORGE_RELATIONS}" ]]; then
+            relations_json="$(
+              printf '%s' "${CURSEFORGE_RELATIONS}" | jq -Rn '
+                [inputs
+                 | split(",")
+                 | map(select(length > 0))
+                 | map(
+                     split(":") as $parts
+                     | if ($parts | length) != 2 then
+                         error("Invalid CURSEFORGE_RELATIONS entry. Use slug:type")
+                       else
+                         {
+                           slug: ($parts[0] | gsub("^\\s+|\\s+$"; "")),
+                           type: ($parts[1] | gsub("^\\s+|\\s+$"; ""))
+                         }
+                       end
+                   )]
+                | {projects: .[0]}
+              '
+            )"
+          fi
+
+          metadata="$(
+            jq -n \
+              --arg changelog "$CHANGELOG" \
+              --arg changelogType "markdown" \
+              --arg displayName "$DISPLAY_NAME" \
+              --arg releaseType "$RELEASE_TYPE" \
+              --argjson gameVersions "$(printf '%s\n' "${game_version_ids[@]}" | jq -R . | jq -s 'map(tonumber)')" \
+              --argjson relations "$relations_json" '
+                {
+                  changelog: $changelog,
+                  changelogType: $changelogType,
+                  displayName: $displayName,
+                  gameVersions: $gameVersions,
+                  releaseType: $releaseType
+                }
+                + (if $relations == null or ($relations.projects | length == 0) then {} else {relations: $relations} end)
+              '
+          )"
+
+          response="$(
+            curl -fsSL \
+              -H "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
+              -F "metadata=${metadata}" \
+              -F "file=@${FILE_PATH}" \
+              "https://minecraft.curseforge.com/api/projects/${CURSEFORGE_PROJECT_ID}/upload-file"
+          )"
+
+          echo "CurseForge upload response: ${response}"
