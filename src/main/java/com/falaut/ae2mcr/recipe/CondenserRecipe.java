@@ -34,15 +34,15 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
                     ? DataResult.error(() -> "value must be > 0")
                     : DataResult.success(value),
             DataResult::success);
-    private static final MapCodec<LegacyCondenserCatalystEntry> LEGACY_CATALYST_CODEC = RecordCodecBuilder.mapCodec(
+    private static final MapCodec<CondenserCatalystEntry> CATALYST_CODEC = RecordCodecBuilder.mapCodec(
             instance -> instance.group(
-                    Ingredient.CODEC_NONEMPTY.fieldOf("ingredient").forGetter(LegacyCondenserCatalystEntry::ingredient))
-                    .apply(instance, LegacyCondenserCatalystEntry::new));
+                    Ingredient.CODEC_NONEMPTY.fieldOf("ingredient").forGetter(CondenserCatalystEntry::ingredient))
+                    .apply(instance, CondenserCatalystEntry::new));
     private static final Codec<Ingredient> CATALYST_ENTRY_CODEC = Codec.either(
             Ingredient.CODEC_NONEMPTY,
-            LEGACY_CATALYST_CODEC.codec())
+            CATALYST_CODEC.codec())
             .xmap(
-                    either -> either.map(ingredient -> ingredient, LegacyCondenserCatalystEntry::ingredient),
+                    either -> either.map(ingredient -> ingredient, CondenserCatalystEntry::ingredient),
                     Either::left);
 
     private final ItemStack result;
@@ -202,7 +202,7 @@ public class CondenserRecipe implements Recipe<RecipeInput> {
         return ModRecipeSerializers.CONDENSER_RECIPE.get();
     }
 
-    private record LegacyCondenserCatalystEntry(Ingredient ingredient) {
+    private record CondenserCatalystEntry(Ingredient ingredient) {
     }
 
     private void validateCatalysts() {
