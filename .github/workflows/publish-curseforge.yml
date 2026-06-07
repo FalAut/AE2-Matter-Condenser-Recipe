@@ -76,6 +76,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          version="$(grep '^mod_version=' gradle.properties | cut -d'=' -f2-)"
+          if [[ -z "${version}" ]]; then
+            echo "Failed to resolve mod_version from gradle.properties" >&2
+            exit 1
+          fi
+
           release_type="${INPUT_RELEASE_TYPE:-release}"
           if [[ "${EVENT_NAME}" == "release" ]]; then
             case "${{ github.event.release.prerelease }}" in
@@ -85,9 +91,22 @@ jobs:
           fi
 
           display_name="${RELEASE_NAME:-${REF_NAME:-${{ steps.artifact.outputs.jar_name }}}}"
-          changelog="${INPUT_CHANGELOG:-$RELEASE_BODY}"
+          changelog="$(awk -v version="${version}" '
+            $0 ~ "^## \\[" version "\\]" { capture=1; next }
+            capture && $0 ~ "^## \\[" { exit }
+            capture { print }
+          ' CHANGELOG.md | sed '/^[[:space:]]*$/N;/^\n$/D')"
+
+          if [[ -n "${INPUT_CHANGELOG}" ]]; then
+            changelog="${INPUT_CHANGELOG}"
+          elif [[ -z "${changelog}" && -n "${RELEASE_BODY}" ]]; then
+            changelog="${RELEASE_BODY}"
+          elif [[ -z "${changelog}" ]]; then
+            changelog="Release ${version}"
+          fi
 
           {
+            echo "version=${version}"
             echo "release_type=${release_type}"
             echo "display_name<<EOF"
             echo "${display_name}"
@@ -108,7 +127,7 @@ jobs:
         uses: itsmeow/curseforge-upload@v3.1.2
         with:
           token: ${{ secrets.CURSEFORGE_API_TOKEN }}
-          project_id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          project_id: ${{ vars.CURSEFORGE_PROJECT_ID }}
           game_endpoint: minecraft
           file_path: ${{ steps.artifact.outputs.jar_path }}
           game_versions: ${{ vars.CURSEFORGE_GAME_VERSIONS }}
