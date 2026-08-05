@@ -14,7 +14,6 @@ import com.falaut.ae2mcr.CondenserSelectionState;
 import com.falaut.ae2mcr.api.CondenserSelectionHost;
 import com.falaut.ae2mcr.recipe.CondenserRecipe;
 import com.falaut.ae2mcr.recipe.CondenserRecipeSelectionService;
-import com.fish_dan_.data_energistics.accessor.CondenserBlockEntityAccessor;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -148,8 +147,14 @@ public abstract class CondenserBlockEntityMixin implements CondenserSelectionHos
 
     @Unique
     private void ae2mcr$disableDataEnergisticsMode() {
-        if ((Object) this instanceof CondenserBlockEntityAccessor accessor) {
-            accessor.dataEnergistics$setDataCaptureBallMode(false);
+        try {
+            Class<?> accessorClass = Class.forName(
+                    "com.fish_dan_.data_energistics.accessor.CondenserBlockEntityAccessor", false, getClass().getClassLoader());
+            if (accessorClass.isInstance(this)) {
+                accessorClass.getMethod("dataEnergistics$setDataCaptureBallMode", boolean.class)
+                        .invoke(this, false);
+            }
+        } catch (ReflectiveOperationException | LinkageError ignored) {
         }
     }
 }
